@@ -220,7 +220,17 @@
     {id:"police", en:"police officer", emoji:"👮🏻"},
     {id:"farmer", en:"farmer", emoji:"🧑🏻‍🌾"},
     {id:"artist", en:"artist", emoji:"🧑🏻‍🎨"},
-    {id:"builder", en:"builder", emoji:"👷🏻"}
+    {id:"builder", en:"builder", emoji:"👷🏻"},
+    {id:"bat", en:"bat", emoji:"🦇"},
+    {id:"day", en:"day", emoji:"🌤️"},
+    {id:"night", en:"night", emoji:"🌌"},
+    {id:"moon", en:"moon", emoji:"🌙"},
+    {id:"mouse", en:"mouse", emoji:"🐭"},
+    {id:"owl", en:"owl", emoji:"🦉"},
+    {id:"rain", en:"rain", emoji:"🌧️"},
+    {id:"rainbow", en:"rainbow", emoji:"🌈"},
+    {id:"stars", en:"stars", emoji:"⭐"},
+    {id:"sun", en:"sun", emoji:"☀️"}
   ];
   var defaultQuestions = [
     {id:"q1", en:"What's your name?", emoji:"🙋", expected:""},
@@ -834,14 +844,25 @@
   function renderWordsTab(container){
     var block = el("div","config-block");
     block.appendChild(el("div","rate-label","VOCABULARY WORDS"));
+    var hint = el("div","", "Tap the small box to change the icon — pick any emoji from your keyboard.");
+    hint.style.fontSize = "12px"; hint.style.color = "var(--ink-soft)"; hint.style.marginBottom = "10px";
+    block.appendChild(hint);
     state.words.forEach(function(w, idx){
       var row = el("div","word-row");
+      var emojiInp = document.createElement("input");
+      emojiInp.className = "small";
+      emojiInp.style.flex = "0 0 54px";
+      emojiInp.style.textAlign = "center";
+      emojiInp.style.fontSize = "20px";
+      emojiInp.value = w.emoji || "⭐";
+      emojiInp.oninput = function(){ w.emoji = emojiInp.value; };
       var inp = document.createElement("input");
       inp.value = w.en;
+      inp.placeholder = "Word";
       inp.oninput = function(){ w.en = inp.value; };
       var del = el("button","del-word","✕");
       del.onclick = function(){ state.words.splice(idx,1); render(); };
-      row.appendChild(inp); row.appendChild(del);
+      row.appendChild(emojiInp); row.appendChild(inp); row.appendChild(del);
       block.appendChild(row);
     });
     var addBtn = el("button","add-word-btn","+ Add word");
