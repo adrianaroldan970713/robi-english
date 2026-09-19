@@ -9,17 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#E6F7FF;
+    --bg:#F3F8FF;
     --bg-soft:#FFFFFF;
-    --ink:#26314D;
-    --ink-soft:#5C6B8A;
-    --primary:#FF6F3C;
-    --primary-ink:#7A2E00;
-    --secondary:#00B2A9;
-    --accent:#FF4D6D;
-    --accent-deep:#E1274B;
-    --yellow:#FFC93C;
-    --panel-border:#CDEFFA;
+    --ink:#33415C;
+    --ink-soft:#7C8BA6;
+    --primary:#FFB199;
+    --primary-ink:#8A3B24;
+    --secondary:#7FD1C7;
+    --accent:#FF9EB5;
+    --accent-deep:#F26D93;
+    --yellow:#FFD972;
+    --panel-border:#DCEBFA;
     --shadow: 0 10px 30px rgba(38,49,77,.14);
     --radius-lg: 28px;
     --radius-md: 18px;
@@ -111,9 +111,9 @@
   #antenna-light{ transition:fill .25s ease; }
   .state-listening #antenna-light{ animation:pulse-pink .9s infinite ease-in-out; }
   .state-talking #antenna-light{ animation:pulse-yellow .5s infinite ease-in-out; }
-  .state-happy #antenna-light{ fill:#00B2A9; }
-  @keyframes pulse-pink{ 0%,100%{fill:#FF4D6D;} 50%{fill:#FFB2C0;} }
-  @keyframes pulse-yellow{ 0%,100%{fill:#FFC93C;} 50%{fill:#FFEBB0;} }
+  .state-happy #antenna-light{ fill:#7FD1C7; }
+  @keyframes pulse-pink{ 0%,100%{fill:#FF9EB5;} 50%{fill:#FFD9E3;} }
+  @keyframes pulse-yellow{ 0%,100%{fill:#FFD972;} 50%{fill:#FFF0CB;} }
   .eye{ animation: blink 4.2s infinite; transform-origin:center; }
   .eye.right{ animation-delay:.08s; }
   @keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.08); } }
@@ -134,7 +134,8 @@
     border:2px solid var(--panel-border);
   }
   .word-emoji{ font-size:72px; line-height:1; margin-bottom:6px; }
-  .word-en{ font-family:'Baloo 2',sans-serif; font-size:24px; font-weight:700; color:var(--primary-ink); }
+  .word-en{ font-family:'Baloo 2',sans-serif; font-size:24px; font-weight:700; color:var(--primary-ink); line-height:1.25; }
+  .word-en.long{ font-size:19px; }
 
   .listen-btn{
     width:100%; margin-top:14px; padding:14px; border-radius:16px; background:var(--yellow); color:var(--primary-ink);
@@ -143,17 +144,25 @@
 
   .mic-btn{
     width:110px; height:110px; border-radius:50%; background:var(--accent); color:#fff; font-size:40px;
-    display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(255,77,109,.45); margin:14px auto 6px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(255,158,181,.5); margin:14px auto 6px;
     transition:transform .15s ease;
   }
   .mic-btn.recording{ background:var(--accent-deep); animation:mic-pulse 1s infinite; }
-  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(225,39,75,.5);} 50%{ box-shadow:0 0 0 18px rgba(225,39,75,0);} }
+  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(242,109,147,.55);} 50%{ box-shadow:0 0 0 18px rgba(242,109,147,0);} }
   .mic-hint{ font-size:14px; color:var(--ink-soft); font-weight:700; text-align:center; }
 
   .attempt-row{ display:flex; gap:10px; width:100%; max-width:360px; margin-top:14px; }
   .attempt-row button{ flex:1; padding:13px 8px; border-radius:14px; font-weight:800; font-size:14px; }
   .btn-replay{ background:var(--bg-soft); border:2px solid var(--secondary); color:var(--secondary); }
   .btn-retry{ background:var(--bg-soft); border:2px solid var(--panel-border); color:var(--ink-soft); }
+
+  .ai-hint{
+    width:100%; max-width:360px; margin-top:12px; padding:12px 14px; border-radius:14px;
+    font-weight:700; font-size:14px; text-align:center; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .ai-hint.match{ background:rgba(0,178,169,.15); color:var(--secondary); }
+  .ai-hint.nomatch{ background:rgba(255,201,60,.22); color:var(--primary-ink); }
+  .ai-hint.neutral{ background:var(--bg-soft); color:var(--ink-soft); border:1px solid var(--panel-border); }
 
   .rate-panel{
     width:100%; max-width:400px; background:var(--bg-soft); border:2px dashed var(--panel-border);
@@ -173,12 +182,12 @@
   }
   .next-btn:disabled{ opacity:.35; }
 
-  .tab-row{ display:flex; gap:8px; margin-bottom:16px; width:100%; max-width:520px; }
-  .tab-btn{ flex:1; padding:10px; border-radius:12px; background:var(--bg-soft); border:2px solid var(--panel-border); font-weight:800; font-size:13px; color:var(--ink-soft); }
+  .tab-row{ display:flex; gap:8px; margin-bottom:16px; width:100%; max-width:520px; flex-wrap:wrap; }
+  .tab-btn{ flex:1; min-width:90px; padding:10px; border-radius:12px; background:var(--bg-soft); border:2px solid var(--panel-border); font-weight:800; font-size:13px; color:var(--ink-soft); }
   .tab-btn.active{ background:var(--ink); color:var(--bg-soft); border-color:var(--ink); }
 
   .table-wrap{ width:100%; overflow-x:auto; }
-  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:560px; }
   th,td{ padding:9px 8px; text-align:left; border-bottom:1px solid var(--panel-border); }
   th{ color:var(--ink-soft); font-size:11px; text-transform:none; }
   .session-row{ cursor:pointer; }
@@ -190,11 +199,12 @@
   .config-block{ width:100%; max-width:520px; background:var(--bg-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:14px; border:1px solid var(--panel-border); }
   .word-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
   .word-row input{ flex:1; padding:8px; border-radius:8px; border:1px solid var(--panel-border); background:var(--bg); color:var(--ink); font-size:14px; }
+  .word-row input.small{ flex:0 0 110px; }
   .del-word{ background:none; color:var(--accent-deep); font-weight:800; font-size:16px; padding:6px 10px; }
   .add-word-btn{ margin-top:6px; padding:9px 14px; border-radius:10px; background:var(--secondary); color:#fff; font-weight:700; font-size:13px; }
 
   .empty-state{ text-align:center; color:var(--ink-soft); font-size:14px; padding:30px 10px; }
-  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg-soft); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700; z-index:100; opacity:0; transition:opacity .25s ease; pointer-events:none; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg-soft); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700; z-index:100; opacity:0; transition:opacity .25s ease; pointer-events:none; max-width:88vw; text-align:center; }
   .toast.show{ opacity:1; }
 
   .confetti-layer{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:5; }
@@ -210,21 +220,29 @@
 (function(){
   "use strict";
 
-  var STORAGE_KEY_SESSIONS = "robi_sessions_v1";
-  var STORAGE_KEY_WORDS = "robi_words_v1";
-  var STORAGE_KEY_ROSTER = "robi_roster_v1";
+  var STORAGE_KEY_SESSIONS = "robi_sessions_v2";
+  var STORAGE_KEY_WORDS = "robi_words_v2";
+  var STORAGE_KEY_QUESTIONS = "robi_questions_v2";
+  var STORAGE_KEY_ROSTER = "robi_roster_v2";
 
   function range(a,b){ var r=[]; for(var i=a;i<=b;i++) r.push(i); return r; }
 
   var defaultWords = [
-    {id:"doctor", en:"doctor", emoji:"🩺"},
-    {id:"chef", en:"chef", emoji:"🧑‍🍳"},
-    {id:"teacher", en:"teacher", emoji:"🧑‍🏫"},
-    {id:"firefighter", en:"firefighter", emoji:"🧑‍🚒"},
-    {id:"police", en:"police officer", emoji:"👮"},
-    {id:"farmer", en:"farmer", emoji:"🧑‍🌾"},
-    {id:"artist", en:"artist", emoji:"🧑‍🎨"},
-    {id:"builder", en:"builder", emoji:"👷"}
+    {id:"doctor", en:"doctor", emoji:"🧑🏻‍⚕️"},
+    {id:"chef", en:"chef", emoji:"🧑🏻‍🍳"},
+    {id:"teacher", en:"teacher", emoji:"🧑🏻‍🏫"},
+    {id:"firefighter", en:"firefighter", emoji:"🧑🏻‍🚒"},
+    {id:"police", en:"police officer", emoji:"👮🏻"},
+    {id:"farmer", en:"farmer", emoji:"🧑🏻‍🌾"},
+    {id:"artist", en:"artist", emoji:"🧑🏻‍🎨"},
+    {id:"builder", en:"builder", emoji:"👷🏻"}
+  ];
+  var defaultQuestions = [
+    {id:"q1", en:"What's your name?", emoji:"🙋", expected:""},
+    {id:"q2", en:"How are you today?", emoji:"😊", expected:""},
+    {id:"q3", en:"Do you like dogs?", emoji:"🐶", expected:""},
+    {id:"q4", en:"What color is the sky?", emoji:"🌤️", expected:"blue"},
+    {id:"q5", en:"Is it hot or cold today?", emoji:"🌡️", expected:""}
   ];
   var defaultRoster = { kinder1: range(1,12), kinder2: range(13,24) };
 
@@ -233,7 +251,7 @@
       var raw = localStorage.getItem(key);
       if(!raw) return fallback;
       var parsed = JSON.parse(raw);
-      return parsed || fallback;
+      return (parsed && parsed.length !== 0) ? parsed : fallback;
     }catch(e){ return fallback; }
   }
   function saveLocal(key, value){
@@ -246,9 +264,11 @@
     group: "kinder1",
     childId: null,
     phase: null,
+    activity: null,
     words: loadLocal(STORAGE_KEY_WORDS, defaultWords),
+    questions: loadLocal(STORAGE_KEY_QUESTIONS, defaultQuestions),
     roster: loadLocal(STORAGE_KEY_ROSTER, defaultRoster),
-    wordIndex: 0,
+    itemIndex: 0,
     attempts: [],
     currentAttempt: null,
     recording: false,
@@ -259,6 +279,9 @@
 
   var app = document.getElementById("app");
   var mediaRecorder = null, audioChunks = [], localAudioUrl = null;
+  var recognitionSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  function currentItems(){ return state.activity === "questions" ? state.questions : state.words; }
 
   function showToast(msg){
     var t = document.getElementById("toastEl");
@@ -270,10 +293,10 @@
     t.textContent = msg;
     t.classList.add("show");
     clearTimeout(state.toastTimer);
-    state.toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+    state.toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
   }
 
-  function speakWord(text){
+  function speakText(text){
     if(!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
@@ -293,6 +316,10 @@
     var el = document.getElementById("robotWrap");
     if(!el) return;
     el.className = "robot-wrap state-" + s;
+  }
+
+  function normalize(s){
+    return (s||"").toLowerCase().replace(/[^a-z\s]/g,"").trim();
   }
 
   async function startRecording(){
@@ -325,6 +352,33 @@
         setTimeout(function(){ setRobotState("idle"); }, 900);
         render();
       };
+
+      if(recognitionSupported){
+        try{
+          var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+          var rec = new SR();
+          rec.lang = "en-US";
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+          rec.onresult = function(ev){
+            var txt = ev.results[0][0].transcript;
+            var item = currentItems()[state.itemIndex];
+            var expected = state.activity === "questions" ? (item.expected||"") : item.en;
+            state.currentAttempt = state.currentAttempt || {};
+            state.currentAttempt.recognized = txt;
+            if(expected){
+              var a = normalize(txt), b = normalize(expected);
+              state.currentAttempt.autoMatch = a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+            } else {
+              state.currentAttempt.autoMatch = null;
+            }
+            render();
+          };
+          rec.onerror = function(){};
+          rec.start();
+        }catch(e){}
+      }
+
       mediaRecorder.start();
       state.recording = true;
       setRobotState("listening");
@@ -344,12 +398,15 @@
     a.play();
   }
 
-  function goNextWord(){
-    var wordObj = state.words[state.wordIndex];
+  function goNextItem(){
+    var items = currentItems();
+    var itemObj = items[state.itemIndex];
     var att = state.currentAttempt || {};
     state.attempts.push({
-      wordId: wordObj.id,
-      wordEn: wordObj.en,
+      itemId: itemObj.id,
+      itemText: itemObj.en,
+      recognized: att.recognized || null,
+      autoMatch: (typeof att.autoMatch === "boolean") ? att.autoMatch : null,
       rating: att.rating || null,
       silencio: !!att.silencio,
       autocorrige: !!att.autocorrige,
@@ -357,8 +414,8 @@
     });
     state.currentAttempt = null;
     if(localAudioUrl){ URL.revokeObjectURL(localAudioUrl); localAudioUrl = null; }
-    if(state.wordIndex < state.words.length - 1){
-      state.wordIndex++;
+    if(state.itemIndex < items.length - 1){
+      state.itemIndex++;
       render();
     } else {
       finishSession();
@@ -373,6 +430,7 @@
       childId: state.childId,
       jardin: jardin,
       phase: state.phase,
+      activity: state.activity,
       date: new Date().toISOString(),
       attempts: state.attempts
     });
@@ -386,7 +444,8 @@
     state.view = "childSelect";
     state.childId = null;
     state.phase = null;
-    state.wordIndex = 0;
+    state.activity = null;
+    state.itemIndex = 0;
     state.attempts = [];
     state.currentAttempt = null;
     render();
@@ -396,6 +455,7 @@
     app.innerHTML = "";
     if(state.view === "childSelect") return renderChildSelect();
     if(state.view === "phaseSelect") return renderPhaseSelect();
+    if(state.view === "activitySelect") return renderActivitySelect();
     if(state.view === "play") return renderPlay();
     if(state.view === "sessionEnd") return renderSessionEnd();
     if(state.view === "teacherGate") return renderTeacherGate();
@@ -452,17 +512,42 @@
     row.appendChild(b1); row.appendChild(b2);
     s.appendChild(row);
 
-    var cta = el("button","big-cta","Start playing 🤖");
+    var cta = el("button","big-cta","Continue →");
     cta.disabled = !state.phase;
-    cta.onclick = function(){
-      if(!state.phase) return;
-      state.wordIndex = 0; state.attempts = []; state.currentAttempt = null;
-      state.view = "play"; render();
-    };
+    cta.onclick = function(){ if(state.phase){ state.view="activitySelect"; render(); } };
     s.appendChild(cta);
 
     var back = el("button","ghost-btn","← Change child");
     back.onclick = function(){ state.view="childSelect"; render(); };
+    s.appendChild(back);
+
+    app.appendChild(s);
+  }
+
+  function renderActivitySelect(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","What do you want to practice?"));
+    s.appendChild(el("div","subtitle","For your Before/After comparison, keep the same activity both times"));
+
+    var row = el("div","phase-row");
+    var b1 = el("button","phase-btn" + (state.activity==="words"?" selected":""), "🔤 Words");
+    var b2 = el("button","phase-btn" + (state.activity==="questions"?" selected":""), "❓ Questions");
+    b1.onclick = function(){ state.activity="words"; render(); };
+    b2.onclick = function(){ state.activity="questions"; render(); };
+    row.appendChild(b1); row.appendChild(b2);
+    s.appendChild(row);
+
+    var cta = el("button","big-cta","Start playing 🤖");
+    cta.disabled = !state.activity;
+    cta.onclick = function(){
+      if(!state.activity) return;
+      state.itemIndex = 0; state.attempts = []; state.currentAttempt = null;
+      state.view = "play"; render();
+    };
+    s.appendChild(cta);
+
+    var back = el("button","ghost-btn","← Back");
+    back.onclick = function(){ state.view="phaseSelect"; render(); };
     s.appendChild(back);
 
     app.appendChild(s);
@@ -474,19 +559,19 @@
     wrap.innerHTML =
       '<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">' +
         '<line x1="100" y1="8" x2="100" y2="26" stroke="#B7C7D9" stroke-width="4" stroke-linecap="round"/>' +
-        '<circle id="antenna-light" cx="100" cy="8" r="8" fill="#00B2A9"/>' +
+        '<circle id="antenna-light" cx="100" cy="8" r="8" fill="#7FD1C7"/>' +
         '<g class="robot-body">' +
-          '<rect x="34" y="26" width="132" height="104" rx="30" fill="#FF6F3C"/>' +
+          '<rect x="34" y="26" width="132" height="104" rx="30" fill="#FFB199"/>' +
           '<rect x="50" y="42" width="100" height="72" rx="20" fill="#26314D"/>' +
           '<circle class="eye left" cx="84" cy="76" r="10" fill="#FFFFFF"/>' +
           '<circle class="eye right" cx="116" cy="76" r="10" fill="#FFFFFF"/>' +
           '<circle cx="84" cy="76" r="4.5" fill="#26314D"/>' +
           '<circle cx="116" cy="76" r="4.5" fill="#26314D"/>' +
-          '<path id="mouth" d="M85 94 Q100 100 115 94" stroke="#FFC93C" stroke-width="5" fill="none" stroke-linecap="round"/>' +
-          '<rect x="14" y="60" width="20" height="42" rx="10" fill="#FF6F3C"/>' +
-          '<rect x="166" y="60" width="20" height="42" rx="10" fill="#FF6F3C"/>' +
-          '<rect x="70" y="130" width="60" height="66" rx="22" fill="#00B2A9"/>' +
-          '<circle cx="100" cy="160" r="10" fill="#FFC93C"/>' +
+          '<path id="mouth" d="M85 94 Q100 100 115 94" stroke="#FFD972" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+          '<rect x="14" y="60" width="20" height="42" rx="10" fill="#FFB199"/>' +
+          '<rect x="166" y="60" width="20" height="42" rx="10" fill="#FFB199"/>' +
+          '<rect x="70" y="130" width="60" height="66" rx="22" fill="#7FD1C7"/>' +
+          '<circle cx="100" cy="160" r="10" fill="#FFD972"/>' +
         '</g>' +
       '</svg>';
     return wrap;
@@ -494,11 +579,12 @@
 
   function renderPlay(){
     var s = el("div","screen");
-    var word = state.words[state.wordIndex];
+    var items = currentItems();
+    var item = items[state.itemIndex];
 
     var dots = el("div","progress-dots");
-    state.words.forEach(function(w,i){
-      var cls = "dot" + (i<state.wordIndex ? " done" : (i===state.wordIndex ? " current" : ""));
+    items.forEach(function(w,i){
+      var cls = "dot" + (i<state.itemIndex ? " done" : (i===state.itemIndex ? " current" : ""));
       dots.appendChild(el("div",cls));
     });
     s.appendChild(dots);
@@ -506,10 +592,11 @@
     s.appendChild(renderRobot());
 
     var card = el("div","word-card");
-    card.appendChild(el("div","word-emoji", word.emoji));
-    card.appendChild(el("div","word-en", word.en));
+    card.appendChild(el("div","word-emoji", item.emoji));
+    var wEl = el("div","word-en" + (item.en.length > 16 ? " long" : ""), item.en);
+    card.appendChild(wEl);
     var listenBtn = el("button","listen-btn","🔊 Listen");
-    listenBtn.onclick = function(){ speakWord(word.en); };
+    listenBtn.onclick = function(){ speakText(item.en); };
     card.appendChild(listenBtn);
     s.appendChild(card);
 
@@ -519,7 +606,7 @@
         if(state.recording){ stopRecording(); } else { startRecording(); }
       };
       s.appendChild(mic);
-      s.appendChild(el("div","mic-hint", state.recording ? "Recording… tap to stop" : "Tap the microphone and repeat the word"));
+      s.appendChild(el("div","mic-hint", state.recording ? "Recording… tap to stop" : (state.activity==="questions" ? "Ask the child, then tap to record their answer" : "Tap the microphone and repeat the word")));
     } else {
       var row = el("div","attempt-row");
       var replay = el("button","btn-replay","▶️ Listen again");
@@ -529,10 +616,25 @@
       row.appendChild(replay); row.appendChild(retry);
       s.appendChild(row);
 
+      var att = state.currentAttempt;
+      if(recognitionSupported){
+        if(att.recognized){
+          var cls2 = att.autoMatch === true ? "match" : (att.autoMatch === false ? "nomatch" : "neutral");
+          var msg = att.autoMatch === true ? ("✅ Robi heard: “" + att.recognized + "” — great pronunciation!")
+                   : att.autoMatch === false ? ("🤔 Robi heard: “" + att.recognized + "” — want to try again?")
+                   : ("🎙️ Robi heard: “" + att.recognized + "”");
+          s.appendChild(el("div","ai-hint " + cls2, msg));
+        } else {
+          s.appendChild(el("div","ai-hint neutral","🎙️ Listening… (this only works on this device's browser)"));
+        }
+      } else {
+        s.appendChild(el("div","ai-hint neutral","This device can't auto-check pronunciation — please rate below."));
+      }
+
       s.appendChild(renderRatePanel());
 
-      var next = el("button","next-btn", state.wordIndex < state.words.length-1 ? "Next word →" : "Finish session 🎉");
-      next.onclick = goNextWord;
+      var next = el("button","next-btn", state.itemIndex < items.length-1 ? "Next →" : "Finish session 🎉");
+      next.onclick = goNextItem;
       s.appendChild(next);
     }
 
@@ -542,7 +644,7 @@
   function renderRatePanel(){
     var att = state.currentAttempt;
     var panel = el("div","rate-panel");
-    panel.appendChild(el("div","rate-label","QUICK RATING (optional)"));
+    panel.appendChild(el("div","rate-label","YOUR RATING (optional — this is what's saved for your data)"));
 
     var faces = el("div","face-row");
     [["😖",1],["😕",2],["🙂",3],["😄",4]].forEach(function(pair){
@@ -568,7 +670,7 @@
   function renderSessionEnd(){
     var s = el("div","screen");
     var conf = el("div","confetti-layer");
-    var colors = ["#FF6F3C","#00B2A9","#FF4D6D","#FFC93C"];
+    var colors = ["#FFB199","#7FD1C7","#FF9EB5","#FFD972"];
     for(var i=0;i<26;i++){
       var p = el("div","confetti-piece");
       p.style.left = (Math.random()*100)+"%";
@@ -613,7 +715,7 @@
     s.appendChild(el("h1","title","Teacher panel"));
 
     var tabs = el("div","tab-row");
-    [["sessions","Sessions"],["words","Words"],["roster","Children"]].forEach(function(t){
+    [["sessions","Sessions"],["words","Words"],["questions","Questions"],["roster","Children"]].forEach(function(t){
       var b = el("button","tab-btn"+(state.teacherTab===t[0]?" active":""), t[1]);
       b.onclick = function(){ state.teacherTab=t[0]; state.openSessionId=null; render(); };
       tabs.appendChild(b);
@@ -622,6 +724,7 @@
 
     if(state.teacherTab === "sessions") renderSessionsTab(s);
     if(state.teacherTab === "words") renderWordsTab(s);
+    if(state.teacherTab === "questions") renderQuestionsTab(s);
     if(state.teacherTab === "roster") renderRosterTab(s);
 
     var back = el("button","ghost-btn","← Exit panel");
@@ -656,11 +759,11 @@
       return;
     }
     var table = el("table");
-    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Phase</th><th>Date</th><th>Avg.</th></tr>";
+    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Phase</th><th>Activity</th><th>Date</th><th>Avg.</th></tr>";
     sessions.forEach(function(d){
       var avg = avgRating(d.attempts);
       var tr = el("tr","session-row");
-      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.phase==="antes"?"Before":"After")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.phase==="antes"?"Before":"After")+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
       tr.onclick = function(){
         state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
         render();
@@ -668,7 +771,7 @@
       table.appendChild(tr);
       if(state.openSessionId === d.id){
         var detailTr = el("tr");
-        var td = el("td"); td.colSpan = 5;
+        var td = el("td"); td.colSpan = 6;
         td.appendChild(buildSessionDetail(d));
         detailTr.appendChild(td);
         table.appendChild(detailTr);
@@ -693,11 +796,12 @@
     var panel = el("div","detail-panel");
     (data.attempts||[]).forEach(function(a){
       var row = el("div","detail-item");
-      var left = el("div","", a.wordEn + (a.noParticipo ? " (did not participate)" : ""));
+      var left = el("div","", a.itemText + (a.noParticipo ? " (did not participate)" : ""));
       var faceLabel = a.rating ? ["😖","😕","🙂","😄"][a.rating-1] : "—";
       var tags = [];
       if(a.silencio) tags.push("silence");
       if(a.autocorrige) tags.push("self-correction");
+      if(a.recognized) tags.push('heard: "'+a.recognized+'"');
       var right = el("div","", faceLabel + (tags.length? " · "+tags.join(", ") : ""));
       row.appendChild(left); row.appendChild(right);
       panel.appendChild(row);
@@ -707,7 +811,7 @@
 
   function renderWordsTab(container){
     var block = el("div","config-block");
-    block.appendChild(el("div","rate-label","CURRENT VOCABULARY"));
+    block.appendChild(el("div","rate-label","VOCABULARY WORDS"));
     state.words.forEach(function(w, idx){
       var row = el("div","word-row");
       var inp = document.createElement("input");
@@ -729,6 +833,45 @@
     saveBtn.style.background = "var(--primary)";
     saveBtn.onclick = function(){
       var ok = saveLocal(STORAGE_KEY_WORDS, state.words);
+      showToast(ok ? "List saved on this tablet ✓" : "Couldn't save.");
+    };
+    block.appendChild(saveBtn);
+    container.appendChild(block);
+  }
+
+  function renderQuestionsTab(container){
+    var block = el("div","config-block");
+    block.appendChild(el("div","rate-label","SIMPLE QUESTIONS"));
+    var hint = el("div","", "Leave \"expected answer\" empty for open questions (name, feelings). Fill it in only for questions with one clear answer (like colors) so Robi can try to auto-check it.");
+    hint.style.fontSize = "12px"; hint.style.color = "var(--ink-soft)"; hint.style.marginBottom = "10px";
+    block.appendChild(hint);
+    state.questions.forEach(function(q, idx){
+      var row = el("div","word-row");
+      var inp = document.createElement("input");
+      inp.value = q.en;
+      inp.placeholder = "Question";
+      inp.oninput = function(){ q.en = inp.value; };
+      var inp2 = document.createElement("input");
+      inp2.className = "small";
+      inp2.value = q.expected || "";
+      inp2.placeholder = "Expected answer";
+      inp2.oninput = function(){ q.expected = inp2.value; };
+      var del = el("button","del-word","✕");
+      del.onclick = function(){ state.questions.splice(idx,1); render(); };
+      row.appendChild(inp); row.appendChild(inp2); row.appendChild(del);
+      block.appendChild(row);
+    });
+    var addBtn = el("button","add-word-btn","+ Add question");
+    addBtn.onclick = function(){
+      state.questions.push({id:"q"+Date.now(), en:"New question?", emoji:"❓", expected:""});
+      render();
+    };
+    block.appendChild(addBtn);
+    var saveBtn = el("button","add-word-btn","Save list");
+    saveBtn.style.marginLeft = "8px";
+    saveBtn.style.background = "var(--primary)";
+    saveBtn.onclick = function(){
+      var ok = saveLocal(STORAGE_KEY_QUESTIONS, state.questions);
       showToast(ok ? "List saved on this tablet ✓" : "Couldn't save.");
     };
     block.appendChild(saveBtn);
