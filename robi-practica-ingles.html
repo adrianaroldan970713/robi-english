@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robi English Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E6F7FF;
+    --bg-soft:#FFFFFF;
+    --ink:#26314D;
+    --ink-soft:#5C6B8A;
+    --primary:#FF6F3C;
+    --primary-ink:#7A2E00;
+    --secondary:#00B2A9;
+    --accent:#FF4D6D;
+    --accent-deep:#E1274B;
+    --yellow:#FFC93C;
+    --panel-border:#CDEFFA;
+    --shadow: 0 10px 30px rgba(38,49,77,.14);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161B2E;
+      --bg-soft:#20263D;
+      --ink:#EDF2FF;
+      --ink-soft:#9AA6C7;
+      --panel-border:#333D5C;
+      --shadow: 0 10px 30px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161B2E;
+    --bg-soft:#20263D;
+    --ink:#EDF2FF;
+    --ink-soft:#9AA6C7;
+    --panel-border:#333D5C;
+    --shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Nunito', -apple-system, 'Segoe UI', sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo 2', ui-rounded, 'Segoe UI', sans-serif;
+    font-weight:800;
+    margin:0;
+  }
+  button{ font-family:inherit; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  #app{ max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:20px 18px 34px; position:relative; }
+
+  .gear-btn{
+    position:fixed; top:14px; right:14px; width:40px; height:40px; border-radius:50%;
+    background:var(--bg-soft); border:1px solid var(--panel-border); font-size:18px;
+    display:flex; align-items:center; justify-content:center; opacity:.55; z-index:50;
+    box-shadow: var(--shadow);
+  }
+  .gear-btn:active{ opacity:1; }
+
+  .screen{ display:flex; flex-direction:column; align-items:center; flex:1; width:100%; animation:fadein .35s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .title{ font-size:26px; text-align:center; margin:6px 0 4px; color:var(--ink); }
+  .subtitle{ font-size:15px; color:var(--ink-soft); text-align:center; margin-bottom:18px; font-weight:600; }
+
+  .group-tabs{ display:flex; gap:10px; margin-bottom:16px; }
+  .group-tab{
+    padding:10px 20px; border-radius:999px; background:var(--bg-soft); color:var(--ink);
+    font-weight:800; font-size:15px; border:2px solid var(--panel-border);
+  }
+  .group-tab.active{ background:var(--secondary); color:#fff; border-color:var(--secondary); }
+
+  .number-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; width:100%; max-width:420px; }
+  .number-btn{
+    aspect-ratio:1; border-radius:20px; background:var(--bg-soft); border:2px solid var(--panel-border);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:22px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow);
+    transition:transform .12s ease;
+  }
+  .number-btn:active{ transform:scale(.93); }
+  .number-btn.selected{ background:var(--primary); color:#fff; border-color:var(--primary); }
+
+  .phase-row{ display:flex; gap:14px; width:100%; max-width:420px; margin-top:8px; }
+  .phase-btn{
+    flex:1; padding:22px 10px; border-radius:var(--radius-md); background:var(--bg-soft);
+    border:2px solid var(--panel-border); font-family:'Baloo 2',sans-serif; font-weight:700; font-size:18px;
+    color:var(--ink); box-shadow:var(--shadow);
+  }
+  .phase-btn.selected{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  .big-cta{
+    margin-top:22px; padding:16px 36px; border-radius:999px; background:var(--secondary); color:#fff;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:19px; box-shadow:var(--shadow);
+  }
+  .big-cta:disabled{ opacity:.4; }
+  .ghost-btn{
+    padding:10px 20px; border-radius:999px; background:transparent; color:var(--ink-soft); font-weight:700; font-size:14px;
+  }
+
+  .robot-wrap{ width:190px; height:210px; margin:6px auto 8px; position:relative; }
+  .robot-wrap svg{ width:100%; height:100%; }
+  #antenna-light{ transition:fill .25s ease; }
+  .state-listening #antenna-light{ animation:pulse-pink .9s infinite ease-in-out; }
+  .state-talking #antenna-light{ animation:pulse-yellow .5s infinite ease-in-out; }
+  .state-happy #antenna-light{ fill:#00B2A9; }
+  @keyframes pulse-pink{ 0%,100%{fill:#FF4D6D;} 50%{fill:#FFB2C0;} }
+  @keyframes pulse-yellow{ 0%,100%{fill:#FFC93C;} 50%{fill:#FFEBB0;} }
+  .eye{ animation: blink 4.2s infinite; transform-origin:center; }
+  .eye.right{ animation-delay:.08s; }
+  @keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.08); } }
+  .robot-body{ animation: bob 2.6s ease-in-out infinite; transform-origin:center bottom; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+  .state-listening .robot-body{ animation-duration:.9s; }
+  .state-happy .robot-body{ animation: hop .5s ease-in-out 2; }
+  @keyframes hop{ 0%,100%{ transform:translateY(0) rotate(0);} 50%{ transform:translateY(-14px) rotate(-4deg);} }
+
+  .progress-dots{ display:flex; gap:6px; margin-bottom:8px; }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--panel-border); }
+  .dot.done{ background:var(--secondary); }
+  .dot.current{ background:var(--primary); width:20px; border-radius:6px; }
+
+  .word-card{
+    background:var(--bg-soft); border-radius:var(--radius-lg); box-shadow:var(--shadow);
+    padding:26px 20px; width:100%; max-width:360px; text-align:center; margin:10px 0 18px;
+    border:2px solid var(--panel-border);
+  }
+  .word-emoji{ font-size:72px; line-height:1; margin-bottom:6px; }
+  .word-en{ font-family:'Baloo 2',sans-serif; font-size:24px; font-weight:700; color:var(--primary-ink); }
+
+  .listen-btn{
+    width:100%; margin-top:14px; padding:14px; border-radius:16px; background:var(--yellow); color:var(--primary-ink);
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:17px; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+
+  .mic-btn{
+    width:110px; height:110px; border-radius:50%; background:var(--accent); color:#fff; font-size:40px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(255,77,109,.45); margin:14px auto 6px;
+    transition:transform .15s ease;
+  }
+  .mic-btn.recording{ background:var(--accent-deep); animation:mic-pulse 1s infinite; }
+  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(225,39,75,.5);} 50%{ box-shadow:0 0 0 18px rgba(225,39,75,0);} }
+  .mic-hint{ font-size:14px; color:var(--ink-soft); font-weight:700; text-align:center; }
+
+  .attempt-row{ display:flex; gap:10px; width:100%; max-width:360px; margin-top:14px; }
+  .attempt-row button{ flex:1; padding:13px 8px; border-radius:14px; font-weight:800; font-size:14px; }
+  .btn-replay{ background:var(--bg-soft); border:2px solid var(--secondary); color:var(--secondary); }
+  .btn-retry{ background:var(--bg-soft); border:2px solid var(--panel-border); color:var(--ink-soft); }
+
+  .rate-panel{
+    width:100%; max-width:400px; background:var(--bg-soft); border:2px dashed var(--panel-border);
+    border-radius:var(--radius-md); padding:16px; margin-top:16px;
+  }
+  .rate-label{ font-size:13px; font-weight:800; color:var(--ink-soft); margin-bottom:8px; }
+  .face-row{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
+  .face-btn{ flex:1; padding:10px 0; font-size:24px; border-radius:12px; background:var(--bg); border:2px solid var(--panel-border); }
+  .face-btn.selected{ background:var(--secondary); border-color:var(--secondary); }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .chip{ padding:8px 12px; border-radius:999px; background:var(--bg); border:2px solid var(--panel-border); font-size:13px; font-weight:700; color:var(--ink-soft); }
+  .chip.selected{ background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  .next-btn{
+    width:100%; max-width:360px; margin-top:16px; padding:16px; border-radius:16px; background:var(--secondary); color:#fff;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:18px; box-shadow:var(--shadow);
+  }
+  .next-btn:disabled{ opacity:.35; }
+
+  .tab-row{ display:flex; gap:8px; margin-bottom:16px; width:100%; max-width:520px; }
+  .tab-btn{ flex:1; padding:10px; border-radius:12px; background:var(--bg-soft); border:2px solid var(--panel-border); font-weight:800; font-size:13px; color:var(--ink-soft); }
+  .tab-btn.active{ background:var(--ink); color:var(--bg-soft); border-color:var(--ink); }
+
+  .table-wrap{ width:100%; overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
+  th,td{ padding:9px 8px; text-align:left; border-bottom:1px solid var(--panel-border); }
+  th{ color:var(--ink-soft); font-size:11px; text-transform:none; }
+  .session-row{ cursor:pointer; }
+  .session-row:active{ background:var(--bg); }
+  .detail-panel{ background:var(--bg-soft); border-radius:var(--radius-md); padding:14px; margin:8px 0 16px; border:1px solid var(--panel-border); width:100%; }
+  .detail-item{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--panel-border); font-size:13px; gap:10px; }
+  .detail-item:last-child{ border-bottom:none; }
+
+  .config-block{ width:100%; max-width:520px; background:var(--bg-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:14px; border:1px solid var(--panel-border); }
+  .word-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .word-row input{ flex:1; padding:8px; border-radius:8px; border:1px solid var(--panel-border); background:var(--bg); color:var(--ink); font-size:14px; }
+  .del-word{ background:none; color:var(--accent-deep); font-weight:800; font-size:16px; padding:6px 10px; }
+  .add-word-btn{ margin-top:6px; padding:9px 14px; border-radius:10px; background:var(--secondary); color:#fff; font-weight:700; font-size:13px; }
+
+  .empty-state{ text-align:center; color:var(--ink-soft); font-size:14px; padding:30px 10px; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg-soft); padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700; z-index:100; opacity:0; transition:opacity .25s ease; pointer-events:none; }
+  .toast.show{ opacity:1; }
+
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:5; }
+  .confetti-piece{ position:absolute; top:-10px; width:9px; height:9px; border-radius:2px; animation:fall 1.6s ease-in forwards; }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(360deg); opacity:.3; } }
+</style>
+</head>
+<body>
+<button class="gear-btn" id="gearBtn" aria-label="Teacher mode">⚙️</button>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY_SESSIONS = "robi_sessions_v1";
+  var STORAGE_KEY_WORDS = "robi_words_v1";
+  var STORAGE_KEY_ROSTER = "robi_roster_v1";
+
+  function range(a,b){ var r=[]; for(var i=a;i<=b;i++) r.push(i); return r; }
+
+  var defaultWords = [
+    {id:"doctor", en:"doctor", emoji:"🩺"},
+    {id:"chef", en:"chef", emoji:"🧑‍🍳"},
+    {id:"teacher", en:"teacher", emoji:"🧑‍🏫"},
+    {id:"firefighter", en:"firefighter", emoji:"🧑‍🚒"},
+    {id:"police", en:"police officer", emoji:"👮"},
+    {id:"farmer", en:"farmer", emoji:"🧑‍🌾"},
+    {id:"artist", en:"artist", emoji:"🧑‍🎨"},
+    {id:"builder", en:"builder", emoji:"👷"}
+  ];
+  var defaultRoster = { kinder1: range(1,12), kinder2: range(13,24) };
+
+  function loadLocal(key, fallback){
+    try{
+      var raw = localStorage.getItem(key);
+      if(!raw) return fallback;
+      var parsed = JSON.parse(raw);
+      return parsed || fallback;
+    }catch(e){ return fallback; }
+  }
+  function saveLocal(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch(e){ return false; }
+  }
+
+  var state = {
+    view: "childSelect",
+    group: "kinder1",
+    childId: null,
+    phase: null,
+    words: loadLocal(STORAGE_KEY_WORDS, defaultWords),
+    roster: loadLocal(STORAGE_KEY_ROSTER, defaultRoster),
+    wordIndex: 0,
+    attempts: [],
+    currentAttempt: null,
+    recording: false,
+    teacherTab: "sessions",
+    openSessionId: null,
+    toastTimer: null
+  };
+
+  var app = document.getElementById("app");
+  var mediaRecorder = null, audioChunks = [], localAudioUrl = null;
+
+  function showToast(msg){
+    var t = document.getElementById("toastEl");
+    if(!t){
+      t = document.createElement("div");
+      t.id = "toastEl"; t.className = "toast";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  function speakWord(text){
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.82;
+    u.pitch = 1.05;
+    var voices = window.speechSynthesis.getVoices();
+    var v = voices.find(function(v){ return v.lang === "en-US"; }) ||
+            voices.find(function(v){ return v.lang && v.lang.indexOf("en") === 0; });
+    if(v) u.voice = v;
+    setRobotState("talking");
+    u.onend = function(){ setRobotState("idle"); };
+    window.speechSynthesis.speak(u);
+  }
+
+  function setRobotState(s){
+    var el = document.getElementById("robotWrap");
+    if(!el) return;
+    el.className = "robot-wrap state-" + s;
+  }
+
+  async function startRecording(){
+    if(state.recording) return;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showToast("This browser doesn't allow audio recording.");
+      return;
+    }
+    try{
+      var stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      audioChunks = [];
+      var mime = "";
+      var candidates = ["audio/webm", "audio/mp4", "audio/aac", ""];
+      for(var i=0;i<candidates.length;i++){
+        if(candidates[i] === "" || (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i]))){
+          mime = candidates[i]; break;
+        }
+      }
+      mediaRecorder = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = function(e){ if(e.data && e.data.size>0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = function(){
+        stream.getTracks().forEach(function(t){ t.stop(); });
+        var blob = new Blob(audioChunks, {type: mediaRecorder.mimeType || "audio/webm"});
+        if(localAudioUrl) URL.revokeObjectURL(localAudioUrl);
+        localAudioUrl = URL.createObjectURL(blob);
+        state.currentAttempt = state.currentAttempt || {};
+        state.currentAttempt.hasAudio = true;
+        state.recording = false;
+        setRobotState("happy");
+        setTimeout(function(){ setRobotState("idle"); }, 900);
+        render();
+      };
+      mediaRecorder.start();
+      state.recording = true;
+      setRobotState("listening");
+      render();
+    }catch(e){
+      showToast("Couldn't access the microphone. Check the site's permission in your browser.");
+    }
+  }
+
+  function stopRecording(){
+    if(mediaRecorder && state.recording){ mediaRecorder.stop(); }
+  }
+
+  function replayLocal(){
+    if(!localAudioUrl) return;
+    var a = new Audio(localAudioUrl);
+    a.play();
+  }
+
+  function goNextWord(){
+    var wordObj = state.words[state.wordIndex];
+    var att = state.currentAttempt || {};
+    state.attempts.push({
+      wordId: wordObj.id,
+      wordEn: wordObj.en,
+      rating: att.rating || null,
+      silencio: !!att.silencio,
+      autocorrige: !!att.autocorrige,
+      noParticipo: !!att.noParticipo
+    });
+    state.currentAttempt = null;
+    if(localAudioUrl){ URL.revokeObjectURL(localAudioUrl); localAudioUrl = null; }
+    if(state.wordIndex < state.words.length - 1){
+      state.wordIndex++;
+      render();
+    } else {
+      finishSession();
+    }
+  }
+
+  function finishSession(){
+    var jardin = state.group === "kinder1" ? "K1" : "K2";
+    var sessions = loadLocal(STORAGE_KEY_SESSIONS, []);
+    sessions.unshift({
+      id: "s" + Date.now(),
+      childId: state.childId,
+      jardin: jardin,
+      phase: state.phase,
+      date: new Date().toISOString(),
+      attempts: state.attempts
+    });
+    var ok = saveLocal(STORAGE_KEY_SESSIONS, sessions);
+    showToast(ok ? "Session saved on this tablet ✓" : "Couldn't save (storage full).");
+    state.view = "sessionEnd";
+    render();
+  }
+
+  function resetToStart(){
+    state.view = "childSelect";
+    state.childId = null;
+    state.phase = null;
+    state.wordIndex = 0;
+    state.attempts = [];
+    state.currentAttempt = null;
+    render();
+  }
+
+  function render(){
+    app.innerHTML = "";
+    if(state.view === "childSelect") return renderChildSelect();
+    if(state.view === "phaseSelect") return renderPhaseSelect();
+    if(state.view === "play") return renderPlay();
+    if(state.view === "sessionEnd") return renderSessionEnd();
+    if(state.view === "teacherGate") return renderTeacherGate();
+    if(state.view === "teacherPanel") return renderTeacherPanel();
+  }
+
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function renderChildSelect(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","Who's playing?"));
+    s.appendChild(el("div","subtitle","Tap the group, then the child's number"));
+
+    var tabs = el("div","group-tabs");
+    var t1 = el("button","group-tab" + (state.group==="kinder1"?" active":""), "Kinder 1");
+    var t2 = el("button","group-tab" + (state.group==="kinder2"?" active":""), "Kinder 2");
+    t1.onclick = function(){ state.group="kinder1"; state.childId=null; render(); };
+    t2.onclick = function(){ state.group="kinder2"; state.childId=null; render(); };
+    tabs.appendChild(t1); tabs.appendChild(t2);
+    s.appendChild(tabs);
+
+    var grid = el("div","number-grid");
+    var ids = state.roster[state.group] || [];
+    ids.forEach(function(n){
+      var b = el("button","number-btn" + (state.childId===n?" selected":""), n);
+      b.onclick = function(){ state.childId = n; render(); };
+      grid.appendChild(b);
+    });
+    s.appendChild(grid);
+
+    var cta = el("button","big-cta", "Continue →");
+    cta.disabled = !state.childId;
+    cta.onclick = function(){ if(state.childId){ state.view="phaseSelect"; render(); } };
+    s.appendChild(cta);
+
+    app.appendChild(s);
+  }
+
+  function renderPhaseSelect(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","Which session is this?"));
+    s.appendChild(el("div","subtitle","Child " + state.childId + " · " + (state.group==="kinder1"?"Kinder 1":"Kinder 2")));
+
+    var row = el("div","phase-row");
+    var b1 = el("button","phase-btn" + (state.phase==="antes"?" selected":""), "Before<br><span style='font-weight:600;font-size:12px'>no AI</span>");
+    var b2 = el("button","phase-btn" + (state.phase==="despues"?" selected":""), "After<br><span style='font-weight:600;font-size:12px'>with AI</span>");
+    b1.onclick = function(){ state.phase="antes"; render(); };
+    b2.onclick = function(){ state.phase="despues"; render(); };
+    row.appendChild(b1); row.appendChild(b2);
+    s.appendChild(row);
+
+    var cta = el("button","big-cta","Start playing 🤖");
+    cta.disabled = !state.phase;
+    cta.onclick = function(){
+      if(!state.phase) return;
+      state.wordIndex = 0; state.attempts = []; state.currentAttempt = null;
+      state.view = "play"; render();
+    };
+    s.appendChild(cta);
+
+    var back = el("button","ghost-btn","← Change child");
+    back.onclick = function(){ state.view="childSelect"; render(); };
+    s.appendChild(back);
+
+    app.appendChild(s);
+  }
+
+  function renderRobot(){
+    var wrap = el("div","robot-wrap state-idle");
+    wrap.id = "robotWrap";
+    wrap.innerHTML =
+      '<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">' +
+        '<line x1="100" y1="8" x2="100" y2="26" stroke="#B7C7D9" stroke-width="4" stroke-linecap="round"/>' +
+        '<circle id="antenna-light" cx="100" cy="8" r="8" fill="#00B2A9"/>' +
+        '<g class="robot-body">' +
+          '<rect x="34" y="26" width="132" height="104" rx="30" fill="#FF6F3C"/>' +
+          '<rect x="50" y="42" width="100" height="72" rx="20" fill="#26314D"/>' +
+          '<circle class="eye left" cx="84" cy="76" r="10" fill="#FFFFFF"/>' +
+          '<circle class="eye right" cx="116" cy="76" r="10" fill="#FFFFFF"/>' +
+          '<circle cx="84" cy="76" r="4.5" fill="#26314D"/>' +
+          '<circle cx="116" cy="76" r="4.5" fill="#26314D"/>' +
+          '<path id="mouth" d="M85 94 Q100 100 115 94" stroke="#FFC93C" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+          '<rect x="14" y="60" width="20" height="42" rx="10" fill="#FF6F3C"/>' +
+          '<rect x="166" y="60" width="20" height="42" rx="10" fill="#FF6F3C"/>' +
+          '<rect x="70" y="130" width="60" height="66" rx="22" fill="#00B2A9"/>' +
+          '<circle cx="100" cy="160" r="10" fill="#FFC93C"/>' +
+        '</g>' +
+      '</svg>';
+    return wrap;
+  }
+
+  function renderPlay(){
+    var s = el("div","screen");
+    var word = state.words[state.wordIndex];
+
+    var dots = el("div","progress-dots");
+    state.words.forEach(function(w,i){
+      var cls = "dot" + (i<state.wordIndex ? " done" : (i===state.wordIndex ? " current" : ""));
+      dots.appendChild(el("div",cls));
+    });
+    s.appendChild(dots);
+
+    s.appendChild(renderRobot());
+
+    var card = el("div","word-card");
+    card.appendChild(el("div","word-emoji", word.emoji));
+    card.appendChild(el("div","word-en", word.en));
+    var listenBtn = el("button","listen-btn","🔊 Listen");
+    listenBtn.onclick = function(){ speakWord(word.en); };
+    card.appendChild(listenBtn);
+    s.appendChild(card);
+
+    if(!state.currentAttempt || !state.currentAttempt.hasAudio){
+      var mic = el("button","mic-btn" + (state.recording?" recording":""), state.recording?"■":"🎤");
+      mic.onclick = function(){
+        if(state.recording){ stopRecording(); } else { startRecording(); }
+      };
+      s.appendChild(mic);
+      s.appendChild(el("div","mic-hint", state.recording ? "Recording… tap to stop" : "Tap the microphone and repeat the word"));
+    } else {
+      var row = el("div","attempt-row");
+      var replay = el("button","btn-replay","▶️ Listen again");
+      replay.onclick = replayLocal;
+      var retry = el("button","btn-retry","🔁 Try again");
+      retry.onclick = function(){ state.currentAttempt = null; render(); };
+      row.appendChild(replay); row.appendChild(retry);
+      s.appendChild(row);
+
+      s.appendChild(renderRatePanel());
+
+      var next = el("button","next-btn", state.wordIndex < state.words.length-1 ? "Next word →" : "Finish session 🎉");
+      next.onclick = goNextWord;
+      s.appendChild(next);
+    }
+
+    app.appendChild(s);
+  }
+
+  function renderRatePanel(){
+    var att = state.currentAttempt;
+    var panel = el("div","rate-panel");
+    panel.appendChild(el("div","rate-label","QUICK RATING (optional)"));
+
+    var faces = el("div","face-row");
+    [["😖",1],["😕",2],["🙂",3],["😄",4]].forEach(function(pair){
+      var b = el("button","face-btn" + (att.rating===pair[1]?" selected":""), pair[0]);
+      b.onclick = function(){ att.rating = pair[1]; render(); };
+      faces.appendChild(b);
+    });
+    panel.appendChild(faces);
+
+    var chips = el("div","chip-row");
+    var c1 = el("button","chip" + (att.silencio?" selected":""), "Long silence");
+    c1.onclick = function(){ att.silencio = !att.silencio; render(); };
+    var c2 = el("button","chip" + (att.autocorrige?" selected":""), "Self-corrected");
+    c2.onclick = function(){ att.autocorrige = !att.autocorrige; render(); };
+    var c3 = el("button","chip" + (att.noParticipo?" selected":""), "Did not participate");
+    c3.onclick = function(){ att.noParticipo = !att.noParticipo; render(); };
+    chips.appendChild(c1); chips.appendChild(c2); chips.appendChild(c3);
+    panel.appendChild(chips);
+
+    return panel;
+  }
+
+  function renderSessionEnd(){
+    var s = el("div","screen");
+    var conf = el("div","confetti-layer");
+    var colors = ["#FF6F3C","#00B2A9","#FF4D6D","#FFC93C"];
+    for(var i=0;i<26;i++){
+      var p = el("div","confetti-piece");
+      p.style.left = (Math.random()*100)+"%";
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random()*0.6)+"s";
+      p.style.borderRadius = (Math.random()>0.5? "50%":"2px");
+      conf.appendChild(p);
+    }
+    document.body.appendChild(conf);
+    setTimeout(function(){ conf.remove(); }, 2200);
+
+    var robot = renderRobot();
+    s.appendChild(robot);
+    setTimeout(function(){ setRobotState("happy"); }, 50);
+
+    s.appendChild(el("h1","title","Great job! 🎉"));
+    s.appendChild(el("div","subtitle","Child " + state.childId + " finished their turn"));
+
+    var cta = el("button","big-cta","Next child →");
+    cta.onclick = resetToStart;
+    s.appendChild(cta);
+
+    app.appendChild(s);
+  }
+
+  function renderTeacherGate(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","Teacher mode"));
+    s.appendChild(el("div","subtitle","Is this you? Here you can view, rate, and export sessions."));
+    var row = el("div","phase-row");
+    var yes = el("button","phase-btn","Yes, enter");
+    yes.onclick = function(){ state.view="teacherPanel"; render(); };
+    var no = el("button","phase-btn","No, go back");
+    no.onclick = function(){ state.view="childSelect"; render(); };
+    row.appendChild(yes); row.appendChild(no);
+    s.appendChild(row);
+    app.appendChild(s);
+  }
+
+  function renderTeacherPanel(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","Teacher panel"));
+
+    var tabs = el("div","tab-row");
+    [["sessions","Sessions"],["words","Words"],["roster","Children"]].forEach(function(t){
+      var b = el("button","tab-btn"+(state.teacherTab===t[0]?" active":""), t[1]);
+      b.onclick = function(){ state.teacherTab=t[0]; state.openSessionId=null; render(); };
+      tabs.appendChild(b);
+    });
+    s.appendChild(tabs);
+
+    if(state.teacherTab === "sessions") renderSessionsTab(s);
+    if(state.teacherTab === "words") renderWordsTab(s);
+    if(state.teacherTab === "roster") renderRosterTab(s);
+
+    var back = el("button","ghost-btn","← Exit panel");
+    back.onclick = function(){ state.view="childSelect"; render(); };
+    s.appendChild(back);
+
+    app.appendChild(s);
+  }
+
+  function renderSessionsTab(container){
+    var sessions = loadLocal(STORAGE_KEY_SESSIONS, []);
+
+    var exportBtn = el("button","add-word-btn","⬇️ Export this tablet's data (JSON)");
+    exportBtn.style.marginBottom = "12px";
+    exportBtn.onclick = function(){
+      var blob = new Blob([JSON.stringify(sessions, null, 2)], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "robi-sessions-" + new Date().toISOString().slice(0,10) + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    };
+    container.appendChild(exportBtn);
+
+    var holder = el("div","table-wrap");
+    if(!sessions.length){
+      holder.appendChild(el("div","empty-state","No sessions saved on this tablet yet."));
+      container.appendChild(holder);
+      return;
+    }
+    var table = el("table");
+    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Phase</th><th>Date</th><th>Avg.</th></tr>";
+    sessions.forEach(function(d){
+      var avg = avgRating(d.attempts);
+      var tr = el("tr","session-row");
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.phase==="antes"?"Before":"After")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
+      tr.onclick = function(){
+        state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
+        render();
+      };
+      table.appendChild(tr);
+      if(state.openSessionId === d.id){
+        var detailTr = el("tr");
+        var td = el("td"); td.colSpan = 5;
+        td.appendChild(buildSessionDetail(d));
+        detailTr.appendChild(td);
+        table.appendChild(detailTr);
+      }
+    });
+    holder.appendChild(table);
+    container.appendChild(holder);
+  }
+
+  function avgRating(attempts){
+    if(!attempts || !attempts.length) return null;
+    var vals = attempts.filter(function(a){ return typeof a.rating === "number"; }).map(function(a){ return a.rating; });
+    if(!vals.length) return null;
+    return vals.reduce(function(a,b){return a+b;},0) / vals.length;
+  }
+  function fmtDate(iso){
+    try{ var d = new Date(iso); return d.toLocaleDateString('en-US',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+    catch(e){ return iso; }
+  }
+
+  function buildSessionDetail(data){
+    var panel = el("div","detail-panel");
+    (data.attempts||[]).forEach(function(a){
+      var row = el("div","detail-item");
+      var left = el("div","", a.wordEn + (a.noParticipo ? " (did not participate)" : ""));
+      var faceLabel = a.rating ? ["😖","😕","🙂","😄"][a.rating-1] : "—";
+      var tags = [];
+      if(a.silencio) tags.push("silence");
+      if(a.autocorrige) tags.push("self-correction");
+      var right = el("div","", faceLabel + (tags.length? " · "+tags.join(", ") : ""));
+      row.appendChild(left); row.appendChild(right);
+      panel.appendChild(row);
+    });
+    return panel;
+  }
+
+  function renderWordsTab(container){
+    var block = el("div","config-block");
+    block.appendChild(el("div","rate-label","CURRENT VOCABULARY"));
+    state.words.forEach(function(w, idx){
+      var row = el("div","word-row");
+      var inp = document.createElement("input");
+      inp.value = w.en;
+      inp.oninput = function(){ w.en = inp.value; };
+      var del = el("button","del-word","✕");
+      del.onclick = function(){ state.words.splice(idx,1); render(); };
+      row.appendChild(inp); row.appendChild(del);
+      block.appendChild(row);
+    });
+    var addBtn = el("button","add-word-btn","+ Add word");
+    addBtn.onclick = function(){
+      state.words.push({id:"w"+Date.now(), en:"word", emoji:"⭐"});
+      render();
+    };
+    block.appendChild(addBtn);
+    var saveBtn = el("button","add-word-btn","Save list");
+    saveBtn.style.marginLeft = "8px";
+    saveBtn.style.background = "var(--primary)";
+    saveBtn.onclick = function(){
+      var ok = saveLocal(STORAGE_KEY_WORDS, state.words);
+      showToast(ok ? "List saved on this tablet ✓" : "Couldn't save.");
+    };
+    block.appendChild(saveBtn);
+    container.appendChild(block);
+  }
+
+  function renderRosterTab(container){
+    var block = el("div","config-block");
+    block.appendChild(el("div","rate-label","CHILD NUMBERS PER GROUP (comma-separated)"));
+    ["kinder1","kinder2"].forEach(function(g){
+      var label = el("div","", g==="kinder1"?"Kinder 1":"Kinder 2");
+      label.style.fontWeight = "800"; label.style.marginTop = "8px";
+      block.appendChild(label);
+      var inp = document.createElement("input");
+      inp.style.width = "100%"; inp.style.padding="8px"; inp.style.marginTop="4px";
+      inp.style.borderRadius="8px"; inp.style.border="1px solid var(--panel-border)";
+      inp.style.background="var(--bg)"; inp.style.color="var(--ink)";
+      inp.value = (state.roster[g]||[]).join(", ");
+      inp.onchange = function(){
+        state.roster[g] = inp.value.split(",").map(function(x){return parseInt(x.trim(),10);}).filter(function(n){return !isNaN(n);});
+      };
+      block.appendChild(inp);
+    });
+    var saveBtn = el("button","add-word-btn","Save groups");
+    saveBtn.style.marginTop = "10px";
+    saveBtn.onclick = function(){
+      var ok = saveLocal(STORAGE_KEY_ROSTER, state.roster);
+      showToast(ok ? "Groups saved on this tablet ✓" : "Couldn't save.");
+    };
+    block.appendChild(saveBtn);
+    container.appendChild(block);
+  }
+
+  document.getElementById("gearBtn").onclick = function(){
+    state.view = "teacherGate";
+    render();
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
