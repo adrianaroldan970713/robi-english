@@ -213,14 +213,6 @@
   function range(a,b){ var r=[]; for(var i=a;i<=b;i++) r.push(i); return r; }
 
   var defaultWords = [
-    {id:"doctor", en:"doctor", emoji:"🧑🏻‍⚕️"},
-    {id:"chef", en:"chef", emoji:"🧑🏻‍🍳"},
-    {id:"teacher", en:"teacher", emoji:"🧑🏻‍🏫"},
-    {id:"firefighter", en:"firefighter", emoji:"🧑🏻‍🚒"},
-    {id:"police", en:"police officer", emoji:"👮🏻"},
-    {id:"farmer", en:"farmer", emoji:"🧑🏻‍🌾"},
-    {id:"artist", en:"artist", emoji:"🧑🏻‍🎨"},
-    {id:"builder", en:"builder", emoji:"👷🏻"},
     {id:"bat", en:"bat", emoji:"🦇"},
     {id:"day", en:"day", emoji:"🌤️"},
     {id:"night", en:"night", emoji:"🌌"},
@@ -230,7 +222,15 @@
     {id:"rain", en:"rain", emoji:"🌧️"},
     {id:"rainbow", en:"rainbow", emoji:"🌈"},
     {id:"stars", en:"stars", emoji:"⭐"},
-    {id:"sun", en:"sun", emoji:"☀️"}
+    {id:"sun", en:"sun", emoji:"☀️"},
+    {id:"doctor", en:"doctor", emoji:"🧑🏻‍⚕️"},
+    {id:"chef", en:"chef", emoji:"🧑🏻‍🍳"},
+    {id:"teacher", en:"teacher", emoji:"🧑🏻‍🏫"},
+    {id:"firefighter", en:"firefighter", emoji:"🧑🏻‍🚒"},
+    {id:"police", en:"police officer", emoji:"👮🏻"},
+    {id:"farmer", en:"farmer", emoji:"🧑🏻‍🌾"},
+    {id:"artist", en:"artist", emoji:"🧑🏻‍🎨"},
+    {id:"builder", en:"builder", emoji:"👷🏻"}
   ];
   var defaultQuestions = [
     {id:"q1", en:"What's your name?", emoji:"🙋", expected:""},
@@ -255,7 +255,7 @@
   }
 
   var state = {
-    view: "childSelect",
+    view: "welcome",
     group: "kinder1",
     childId: null,
     phase: null,
@@ -436,7 +436,7 @@
   }
 
   function resetToStart(){
-    state.view = "childSelect";
+    state.view = "welcome";
     state.childId = null;
     state.phase = null;
     state.activity = null;
@@ -448,6 +448,8 @@
 
   function render(){
     app.innerHTML = "";
+    if(state.view === "welcome") return renderWelcome();
+    if(state.view === "groupSelect") return renderGroupSelect();
     if(state.view === "childSelect") return renderChildSelect();
     if(state.view === "phaseSelect") return renderPhaseSelect();
     if(state.view === "activitySelect") return renderActivitySelect();
@@ -464,18 +466,55 @@
     return e;
   }
 
+  function renderWelcome(){
+    var s = el("div","screen");
+    s.style.justifyContent = "center";
+    s.style.flex = "1";
+    var robot = renderRobot();
+    robot.style.width = "230px";
+    robot.style.height = "254px";
+    s.appendChild(robot);
+    setTimeout(function(){ setRobotState("happy"); }, 150);
+
+    s.appendChild(el("h1","title","Let's practice!"));
+    s.appendChild(el("div","subtitle","Robi is ready to play some English games with you"));
+
+    var cta = el("button","big-cta","Let's practice 🤖");
+    cta.onclick = function(){ state.view="groupSelect"; render(); };
+    s.appendChild(cta);
+
+    app.appendChild(s);
+  }
+
+  function renderGroupSelect(){
+    var s = el("div","screen");
+    s.appendChild(el("h1","title","Which class is this?"));
+    s.appendChild(el("div","subtitle","Tap your group"));
+
+    var row = el("div","phase-row");
+    var b1 = el("button","phase-btn" + (state.group==="kinder1"?" selected":""), "Kinder 1");
+    var b2 = el("button","phase-btn" + (state.group==="kinder2"?" selected":""), "Kinder 2");
+    b1.onclick = function(){ state.group="kinder1"; state.childId=null; render(); };
+    b2.onclick = function(){ state.group="kinder2"; state.childId=null; render(); };
+    row.appendChild(b1); row.appendChild(b2);
+    s.appendChild(row);
+
+    var cta = el("button","big-cta","Continue →");
+    cta.disabled = !state.group;
+    cta.onclick = function(){ if(state.group){ state.view="childSelect"; render(); } };
+    s.appendChild(cta);
+
+    var back = el("button","ghost-btn","← Back");
+    back.onclick = function(){ state.view="welcome"; render(); };
+    s.appendChild(back);
+
+    app.appendChild(s);
+  }
+
   function renderChildSelect(){
     var s = el("div","screen");
     s.appendChild(el("h1","title","Who's playing?"));
-    s.appendChild(el("div","subtitle","Tap the group, then the child's number"));
-
-    var tabs = el("div","group-tabs");
-    var t1 = el("button","group-tab" + (state.group==="kinder1"?" active":""), "Kinder 1");
-    var t2 = el("button","group-tab" + (state.group==="kinder2"?" active":""), "Kinder 2");
-    t1.onclick = function(){ state.group="kinder1"; state.childId=null; render(); };
-    t2.onclick = function(){ state.group="kinder2"; state.childId=null; render(); };
-    tabs.appendChild(t1); tabs.appendChild(t2);
-    s.appendChild(tabs);
+    s.appendChild(el("div","subtitle", (state.group==="kinder1"?"Kinder 1":"Kinder 2") + " · tap the child's number"));
 
     var grid = el("div","number-grid");
     var ids = state.roster[state.group] || [];
@@ -490,6 +529,10 @@
     cta.disabled = !state.childId;
     cta.onclick = function(){ if(state.childId){ state.view="phaseSelect"; render(); } };
     s.appendChild(cta);
+
+    var back = el("button","ghost-btn","← Change class");
+    back.onclick = function(){ state.view="groupSelect"; state.childId=null; render(); };
+    s.appendChild(back);
 
     app.appendChild(s);
   }
@@ -736,7 +779,7 @@
     var yes = el("button","phase-btn","Yes, enter");
     yes.onclick = function(){ state.view="teacherPanel"; render(); };
     var no = el("button","phase-btn","No, go back");
-    no.onclick = function(){ state.view="childSelect"; render(); };
+    no.onclick = function(){ state.view="welcome"; render(); };
     row.appendChild(yes); row.appendChild(no);
     s.appendChild(row);
     app.appendChild(s);
@@ -760,7 +803,7 @@
     if(state.teacherTab === "roster") renderRosterTab(s);
 
     var back = el("button","ghost-btn","← Exit panel");
-    back.onclick = function(){ state.view="childSelect"; render(); };
+    back.onclick = function(){ state.view="welcome"; render(); };
     s.appendChild(back);
 
     app.appendChild(s);
