@@ -326,6 +326,15 @@
     window.speechSynthesis.speak(u);
   }
 
+  function sayFeedback(text, ok){
+    var tries = 0;
+    (function waitAndSpeak(){
+      if(state.recording && tries++ < 40){ setTimeout(waitAndSpeak, 150); return; }
+      speakText(text);
+      if(ok){ setTimeout(function(){ setRobotState("happy"); }, 50); }
+    })();
+  }
+
   function setRobotState(s){
     var el = document.getElementById("robotWrap");
     if(!el) return;
@@ -382,13 +391,20 @@
             state.currentAttempt.recognized = txt;
             if(expected){
               var a = normalize(txt), b = normalize(expected);
-              state.currentAttempt.autoMatch = a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+              state.currentAttempt.autoMatch = a.length > 0 && (a.indexOf(b) !== -1 || b.indexOf(a) !== -1);
             } else {
               state.currentAttempt.autoMatch = null;
             }
+            gotResult = true;
             render();
+            if(state.currentAttempt.autoMatch === true) sayFeedback("Correct!", true);
+            else if(state.currentAttempt.autoMatch === false) sayFeedback("Try again.", false);
           };
+          var gotResult = false;
           rec.onerror = function(){};
+          rec.onend = function(){
+            if(!gotResult){ setTimeout(function(){ if(!gotResult) sayFeedback("Try again.", false); }, 300); }
+          };
           rec.start();
         }catch(e){}
       }
