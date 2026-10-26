@@ -155,7 +155,7 @@
   }
   .rate-label{ font-size:13px; font-weight:800; color:var(--ink-soft); margin-bottom:8px; }
   .face-row{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
-  .face-btn{ flex:1; padding:10px 0; font-size:24px; border-radius:12px; background:var(--bg); border:2px solid var(--panel-border); display:flex; align-items:center; justify-content:center; }
+  .face-btn{ flex:1; padding:12px 0; font-size:46px; line-height:1.1; border-radius:12px; background:var(--bg); border:2px solid var(--panel-border); display:flex; align-items:center; justify-content:center; }
   .face-btn.selected{ background:var(--secondary); border-color:var(--secondary); }
   .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
   .chip{ padding:8px 12px; border-radius:999px; background:var(--bg); border:2px solid var(--panel-border); font-size:13px; font-weight:700; color:var(--ink-soft); }
@@ -207,6 +207,7 @@
 
   var STORAGE_KEY_SESSIONS = "robi_sessions_v2";
   var STORAGE_KEY_WORDS = "robi_words_v2";
+  var STORAGE_KEY_TOPICS = "robi_topics_v3";
   var STORAGE_KEY_QUESTIONS = "robi_questions_v2";
   var STORAGE_KEY_ROSTER = "robi_roster_v2";
 
@@ -223,6 +224,8 @@
     {id:"rainbow", en:"rainbow", emoji:"🌈"},
     {id:"stars", en:"stars", emoji:"⭐"},
     {id:"sun", en:"sun", emoji:"☀️"},
+  ];
+  var defaultProfessions = [
     {id:"doctor", en:"doctor", emoji:"🧑🏻‍⚕️"},
     {id:"chef", en:"chef", emoji:"🧑🏻‍🍳"},
     {id:"teacher", en:"teacher", emoji:"🧑🏻‍🏫"},
@@ -232,6 +235,7 @@
     {id:"artist", en:"artist", emoji:"🧑🏻‍🎨"},
     {id:"builder", en:"builder", emoji:"👷🏻"}
   ];
+  var defaultDayNight = defaultWords;
   var defaultQuestions = [
     {id:"q1", en:"What's your name?", emoji:"🙋", expected:""},
     {id:"q2", en:"How are you today?", emoji:"😊", expected:""},
@@ -254,13 +258,23 @@
     catch(e){ return false; }
   }
 
+  function loadTopics(){
+    var t = loadLocal(STORAGE_KEY_TOPICS, null);
+    if(t && t.daynight && t.professions) return t;
+    var oldProf = loadLocal(STORAGE_KEY_WORDS, null);
+    return { daynight: defaultDayNight.slice(), professions: (oldProf || defaultProfessions).map(function(w){return w;}) };
+  }
+
   var state = {
     view: "welcome",
     group: "kinder1",
     childId: null,
     phase: null,
     activity: null,
-    words: loadLocal(STORAGE_KEY_WORDS, defaultWords),
+    topic: null,
+    playItems: null,
+    wordsTopic: "daynight",
+    topics: loadTopics(),
     questions: loadLocal(STORAGE_KEY_QUESTIONS, defaultQuestions),
     roster: loadLocal(STORAGE_KEY_ROSTER, defaultRoster),
     itemIndex: 0,
@@ -276,7 +290,12 @@
   var mediaRecorder = null, audioChunks = [], localAudioUrl = null;
   var recognitionSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
-  function currentItems(){ return state.activity === "questions" ? state.questions : state.words; }
+  function shuffled(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+  function currentItems(){ return state.playItems || state.topics[state.topic] || []; }
 
   function showToast(msg){
     var t = document.getElementById("toastEl");
@@ -288,7 +307,7 @@
     t.textContent = msg;
     t.classList.add("show");
     clearTimeout(state.toastTimer);
-    state.toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+    state.toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 6000);
   }
 
   function speakText(text){
@@ -358,7 +377,7 @@
           rec.onresult = function(ev){
             var txt = ev.results[0][0].transcript;
             var item = currentItems()[state.itemIndex];
-            var expected = state.activity === "questions" ? (item.expected||"") : item.en;
+            var expected = item.en;
             state.currentAttempt = state.currentAttempt || {};
             state.currentAttempt.recognized = txt;
             if(expected){
@@ -374,12 +393,42 @@
         }catch(e){}
       }
 
+      try{
+        var AC = window.AudioContext || window.webkitAudioContext;
+        var ctx = new AC();
+        var src = ctx.createMediaStreamSource(stream);
+        var an = ctx.createAnalyser(); an.fftSize = 512;
+        src.connect(an);
+        var buf = new Uint8Array(an.fftSize);
+        var t0 = Date.now(), lastVoice = 0, heard = false;
+        var timer = setInterval(function(){
+          if(!state.recording){ clearInterval(timer); try{ctx.close();}catch(e){} return; }
+          an.getByteTimeDomainData(buf);
+          var peak = 0;
+          for(var k=0;k<buf.length;k++){ var d = Math.abs(buf[k]-128); if(d>peak) peak=d; }
+          var now = Date.now();
+          if(peak > 14){ heard = true; lastVoice = now; }
+          var tooLong = now - t0 > 7000;
+          var finished = heard && now - lastVoice > 1300 && now - t0 > 1200;
+          var noSpeech = !heard && now - t0 > 5000;
+          if(tooLong || finished || noSpeech){ clearInterval(timer); try{ctx.close();}catch(e){} stopRecording(); }
+        }, 100);
+      }catch(e){
+        setTimeout(function(){ if(state.recording) stopRecording(); }, 4000);
+      }
       mediaRecorder.start();
       state.recording = true;
       setRobotState("listening");
       render();
     }catch(e){
-      showToast("Couldn't access the microphone. Check the site's permission in your browser.");
+      var nm = (e && e.name) ? e.name : "unknown";
+      var msg = "Couldn't record (" + nm + "). ";
+      if(nm === "NotAllowedError" || nm === "SecurityError") msg += "Allow the microphone for this site in the browser settings, then reload.";
+      else if(nm === "NotFoundError") msg += "No microphone found on this device.";
+      else if(nm === "NotReadableError") msg += "Another app is using the microphone. Close it and try again.";
+      else msg += "Please reload the page and try again.";
+      state.recording = false;
+      showToast(msg);
     }
   }
 
@@ -424,8 +473,9 @@
       id: "s" + Date.now(),
       childId: state.childId,
       jardin: jardin,
-      phase: state.phase,
-      activity: state.activity,
+      topic: state.topic,
+      phase: null,
+      activity: "words",
       date: new Date().toISOString(),
       attempts: state.attempts
     });
@@ -438,8 +488,8 @@
   function resetToStart(){
     state.view = "welcome";
     state.childId = null;
-    state.phase = null;
-    state.activity = null;
+    state.topic = null;
+    state.playItems = null;
     state.itemIndex = 0;
     state.attempts = [];
     state.currentAttempt = null;
@@ -451,7 +501,6 @@
     if(state.view === "welcome") return renderWelcome();
     if(state.view === "groupSelect") return renderGroupSelect();
     if(state.view === "childSelect") return renderChildSelect();
-    if(state.view === "phaseSelect") return renderPhaseSelect();
     if(state.view === "activitySelect") return renderActivitySelect();
     if(state.view === "play") return renderPlay();
     if(state.view === "sessionEnd") return renderSessionEnd();
@@ -527,7 +576,7 @@
 
     var cta = el("button","big-cta", "Continue →");
     cta.disabled = !state.childId;
-    cta.onclick = function(){ if(state.childId){ state.view="phaseSelect"; render(); } };
+    cta.onclick = function(){ if(state.childId){ state.view="activitySelect"; render(); } };
     s.appendChild(cta);
 
     var back = el("button","ghost-btn","← Change class");
@@ -537,55 +586,31 @@
     app.appendChild(s);
   }
 
-  function renderPhaseSelect(){
+  function renderActivitySelect(){
     var s = el("div","screen");
-    s.appendChild(el("h1","title","Which session is this?"));
+    s.appendChild(el("h1","title","Choose a topic"));
     s.appendChild(el("div","subtitle","Child " + state.childId + " · " + (state.group==="kinder1"?"Kinder 1":"Kinder 2")));
 
     var row = el("div","phase-row");
-    var b1 = el("button","phase-btn" + (state.phase==="antes"?" selected":""), "Before<br><span style='font-weight:600;font-size:12px'>no AI</span>");
-    var b2 = el("button","phase-btn" + (state.phase==="despues"?" selected":""), "After<br><span style='font-weight:600;font-size:12px'>with AI</span>");
-    b1.onclick = function(){ state.phase="antes"; render(); };
-    b2.onclick = function(){ state.phase="despues"; render(); };
-    row.appendChild(b1); row.appendChild(b2);
-    s.appendChild(row);
-
-    var cta = el("button","big-cta","Continue →");
-    cta.disabled = !state.phase;
-    cta.onclick = function(){ if(state.phase){ state.view="activitySelect"; render(); } };
-    s.appendChild(cta);
-
-    var back = el("button","ghost-btn","← Change child");
-    back.onclick = function(){ state.view="childSelect"; render(); };
-    s.appendChild(back);
-
-    app.appendChild(s);
-  }
-
-  function renderActivitySelect(){
-    var s = el("div","screen");
-    s.appendChild(el("h1","title","What do you want to practice?"));
-    s.appendChild(el("div","subtitle","For your Before/After comparison, keep the same activity both times"));
-
-    var row = el("div","phase-row");
-    var b1 = el("button","phase-btn" + (state.activity==="words"?" selected":""), "🔤 Words");
-    var b2 = el("button","phase-btn" + (state.activity==="questions"?" selected":""), "❓ Questions");
-    b1.onclick = function(){ state.activity="words"; render(); };
-    b2.onclick = function(){ state.activity="questions"; render(); };
+    var b1 = el("button","phase-btn" + (state.topic==="professions"?" selected":""), "🧑🏻‍⚕️<br>Professions");
+    var b2 = el("button","phase-btn" + (state.topic==="daynight"?" selected":""), "☀️🌙<br>Day and Night");
+    b1.onclick = function(){ state.topic="professions"; render(); };
+    b2.onclick = function(){ state.topic="daynight"; render(); };
     row.appendChild(b1); row.appendChild(b2);
     s.appendChild(row);
 
     var cta = el("button","big-cta","Start playing 🤖");
-    cta.disabled = !state.activity;
+    cta.disabled = !state.topic;
     cta.onclick = function(){
-      if(!state.activity) return;
+      if(!state.topic) return;
       state.itemIndex = 0; state.attempts = []; state.currentAttempt = null;
+      state.playItems = shuffled(state.topics[state.topic]);
       state.view = "play"; render();
     };
     s.appendChild(cta);
 
-    var back = el("button","ghost-btn","← Back");
-    back.onclick = function(){ state.view="phaseSelect"; render(); };
+    var back = el("button","ghost-btn","← Change child");
+    back.onclick = function(){ state.view="childSelect"; render(); };
     s.appendChild(back);
 
     app.appendChild(s);
@@ -652,7 +677,7 @@
         if(state.recording){ stopRecording(); } else { startRecording(); }
       };
       s.appendChild(mic);
-      s.appendChild(el("div","mic-hint", state.recording ? "Recording… tap to stop" : (state.activity==="questions" ? "Ask the child, then tap to record their answer" : "Tap the microphone and repeat the word")));
+      s.appendChild(el("div","mic-hint", state.recording ? "Recording… Robi will stop by itself" : "Tap the microphone and repeat the word"));
     } else {
       var row = el("div","attempt-row");
       var replay = el("button","btn-replay","▶️ Listen again");
@@ -721,7 +746,7 @@
     panel.appendChild(el("div","rate-label","YOUR RATING (optional — this is what's saved for your data)"));
 
     var faces = el("div","face-row");
-    [[faceSVG(1),1,"Nervous"],[faceSVG(2),2,"Okay"],[faceSVG(3),3,"Happy"],[faceSVG(4),4,"Great"]].forEach(function(pair){
+    [["😟",1,"Nervous"],["😐",2,"Okay"],["🙂",3,"Happy"],["😄",4,"Great"]].forEach(function(pair){
       var b = el("button","face-btn" + (att.rating===pair[1]?" selected":""), pair[0]);
       b.setAttribute("aria-label", pair[2]);
       b.onclick = function(){ att.rating = pair[1]; render(); };
@@ -834,11 +859,11 @@
       return;
     }
     var table = el("table");
-    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Phase</th><th>Activity</th><th>Date</th><th>Avg.</th></tr>";
+    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Topic</th><th>Activity</th><th>Date</th><th>Avg.</th></tr>";
     sessions.forEach(function(d){
       var avg = avgRating(d.attempts);
       var tr = el("tr","session-row");
-      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.phase==="antes"?"Before":"After")+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
       tr.onclick = function(){
         state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
         render();
@@ -887,11 +912,40 @@
   function renderWordsTab(container){
     var block = el("div","config-block");
     block.appendChild(el("div","rate-label","VOCABULARY WORDS"));
-    var hint = el("div","", "Tap the small box to change the icon — pick any emoji from your keyboard.");
+    var tabs = el("div","chip-row");
+    [["daynight","Day and Night"],["professions","Professions"]].forEach(function(p){
+      var c = el("button","chip" + (state.wordsTopic===p[0]?" selected":""), p[1]);
+      c.onclick = function(){ state.wordsTopic = p[0]; render(); };
+      tabs.appendChild(c);
+    });
+    block.appendChild(tabs);
+    var list = state.topics[state.wordsTopic];
+    var hint = el("div","", "Use the arrows to reorder. Tap the small box to change the icon — pick any emoji from your keyboard.");
     hint.style.fontSize = "12px"; hint.style.color = "var(--ink-soft)"; hint.style.marginBottom = "10px";
     block.appendChild(hint);
-    state.words.forEach(function(w, idx){
+    list.forEach(function(w, idx){
       var row = el("div","word-row");
+      var moveWrap = el("div","");
+      moveWrap.style.display = "flex"; moveWrap.style.flexDirection = "column"; moveWrap.style.gap = "2px";
+      var upBtn = el("button","del-word","▲");
+      upBtn.style.fontSize = "11px"; upBtn.style.padding = "2px 6px"; upBtn.style.color = "var(--ink-soft)";
+      upBtn.disabled = idx === 0;
+      upBtn.style.opacity = idx === 0 ? "0.3" : "1";
+      upBtn.onclick = function(){
+        if(idx === 0) return;
+        var tmp = list[idx-1]; list[idx-1] = list[idx]; list[idx] = tmp;
+        render();
+      };
+      var downBtn = el("button","del-word","▼");
+      downBtn.style.fontSize = "11px"; downBtn.style.padding = "2px 6px"; downBtn.style.color = "var(--ink-soft)";
+      downBtn.disabled = idx === list.length-1;
+      downBtn.style.opacity = idx === list.length-1 ? "0.3" : "1";
+      downBtn.onclick = function(){
+        if(idx === list.length-1) return;
+        var tmp = list[idx+1]; list[idx+1] = list[idx]; list[idx] = tmp;
+        render();
+      };
+      moveWrap.appendChild(upBtn); moveWrap.appendChild(downBtn);
       var emojiInp = document.createElement("input");
       emojiInp.className = "small";
       emojiInp.style.flex = "0 0 54px";
@@ -904,13 +958,13 @@
       inp.placeholder = "Word";
       inp.oninput = function(){ w.en = inp.value; };
       var del = el("button","del-word","✕");
-      del.onclick = function(){ state.words.splice(idx,1); render(); };
-      row.appendChild(emojiInp); row.appendChild(inp); row.appendChild(del);
+      del.onclick = function(){ list.splice(idx,1); render(); };
+      row.appendChild(moveWrap); row.appendChild(emojiInp); row.appendChild(inp); row.appendChild(del);
       block.appendChild(row);
     });
     var addBtn = el("button","add-word-btn","+ Add word");
     addBtn.onclick = function(){
-      state.words.push({id:"w"+Date.now(), en:"word", emoji:"⭐"});
+      list.push({id:"w"+Date.now(), en:"word", emoji:"⭐"});
       render();
     };
     block.appendChild(addBtn);
@@ -918,7 +972,7 @@
     saveBtn.style.marginLeft = "8px";
     saveBtn.style.background = "var(--primary)";
     saveBtn.onclick = function(){
-      var ok = saveLocal(STORAGE_KEY_WORDS, state.words);
+      var ok = saveLocal(STORAGE_KEY_TOPICS, state.topics);
       showToast(ok ? "List saved on this tablet ✓" : "Couldn't save.");
     };
     block.appendChild(saveBtn);
