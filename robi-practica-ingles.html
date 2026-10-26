@@ -274,6 +274,7 @@
     topic: null,
     playItems: null,
     tries: 0,
+    lastSessionId: null,
     anyCorrect: false,
     itemStart: null,
     sessionStart: null,
@@ -328,6 +329,25 @@
     setRobotState("talking");
     u.onend = function(){ setRobotState("idle"); };
     window.speechSynthesis.speak(u);
+  }
+
+  function speakLang(text, lang, onend){
+    if(!window.speechSynthesis){ if(onend) onend(); return; }
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.rate = 0.85; u.pitch = 1.05;
+    var voices = window.speechSynthesis.getVoices();
+    var pre = lang.slice(0,2);
+    var v = voices.find(function(v){ return v.lang === lang; }) || voices.find(function(v){ return v.lang && v.lang.indexOf(pre) === 0; });
+    if(v) u.voice = v;
+    setRobotState("talking");
+    u.onend = function(){ setRobotState("idle"); if(onend) onend(); };
+    window.speechSynthesis.speak(u);
+  }
+  function askFeeling(){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    speakLang("How did you feel today?", "en-US", function(){
+      speakLang("¿Cómo te sentiste hoy?", "es-ES");
+    });
   }
 
   function sayFeedback(text, ok){
@@ -511,7 +531,8 @@
     });
     var ok = saveLocal(STORAGE_KEY_SESSIONS, sessions);
     showToast(ok ? "Session saved on this tablet ✓" : "Couldn't save (storage full).");
-    state.view = "sessionEnd";
+    state.lastSessionId = sessions[0].id;
+    state.view = "feelings";
     render();
   }
 
@@ -534,6 +555,7 @@
     if(state.view === "childSelect") return renderChildSelect();
     if(state.view === "activitySelect") return renderActivitySelect();
     if(state.view === "play") return renderPlay();
+    if(state.view === "feelings") return renderFeelings();
     if(state.view === "sessionEnd") return renderSessionEnd();
     if(state.view === "teacherGate") return renderTeacherGate();
     if(state.view === "teacherPanel") return renderTeacherPanel();
@@ -732,10 +754,8 @@
           s.appendChild(el("div","ai-hint neutral","🎙️ Listening… (this only works on this device's browser)"));
         }
       } else {
-        s.appendChild(el("div","ai-hint neutral","This device can't auto-check pronunciation — please rate below."));
+        s.appendChild(el("div","ai-hint neutral","This device can't auto-check pronunciation."));
       }
-
-      s.appendChild(renderRatePanel());
 
       var next = el("button","next-btn", state.itemIndex < items.length-1 ? "Next →" : "Finish session 🎉");
       next.onclick = goNextItem;
@@ -801,6 +821,41 @@
     panel.appendChild(chips);
 
     return panel;
+  }
+
+  function renderFeelings(){
+    var s = el("div","screen");
+    s.appendChild(renderRobot());
+    s.appendChild(el("h1","title","How did you feel? 🤖"));
+    s.appendChild(el("div","subtitle","¿Cómo te sentiste?"));
+
+    var faces = el("div","face-row");
+    faces.style.width = "100%"; faces.style.maxWidth = "420px";
+    [["😟",1,"Nervous"],["😐",2,"Okay"],["🙂",3,"Happy"],["😄",4,"Great"]].forEach(function(pair){
+      var b = el("button","face-btn", pair[0]);
+      b.style.fontSize = "56px";
+      b.setAttribute("aria-label", pair[2]);
+      b.onclick = function(){
+        var all = loadLocal(STORAGE_KEY_SESSIONS, []);
+        for(var i=0;i<all.length;i++){ if(all[i].id === state.lastSessionId){ all[i].feeling = pair[1]; break; } }
+        saveLocal(STORAGE_KEY_SESSIONS, all);
+        if(window.speechSynthesis) window.speechSynthesis.cancel();
+        state.view = "sessionEnd"; render();
+      };
+      faces.appendChild(b);
+    });
+    s.appendChild(faces);
+
+    var again = el("button","listen-btn","🔊");
+    again.onclick = askFeeling;
+    s.appendChild(again);
+
+    var skip = el("button","ghost-btn","Skip");
+    skip.onclick = function(){ if(window.speechSynthesis) window.speechSynthesis.cancel(); state.view = "sessionEnd"; render(); };
+    s.appendChild(skip);
+
+    app.appendChild(s);
+    setTimeout(askFeeling, 400);
   }
 
   function renderSessionEnd(){
@@ -895,11 +950,11 @@
       return;
     }
     var table = el("table");
-    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Topic</th><th>Activity</th><th>Date</th><th>Time</th><th>Correct</th><th>Tries</th><th>Avg.</th></tr>";
+    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Topic</th><th>Activity</th><th>Date</th><th>Time</th><th>Correct</th><th>Tries</th><th>Felt</th></tr>";
     sessions.forEach(function(d){
       var avg = avgRating(d.attempts);
       var tr = el("tr","session-row");
-      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+fmtDur(d.durationSec)+"</td><td>"+(typeof d.correctCount==="number"?d.correctCount+"/"+d.totalWords:"—")+"</td><td>"+(typeof d.totalTries==="number"?d.totalTries:"—")+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+fmtDur(d.durationSec)+"</td><td>"+(typeof d.correctCount==="number"?d.correctCount+"/"+d.totalWords:"—")+"</td><td>"+(typeof d.totalTries==="number"?d.totalTries:"—")+"</td><td>"+(d.feeling?["😟","😐","🙂","😄"][d.feeling-1]:"—")+"</td>";
       tr.onclick = function(){
         state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
         render();
