@@ -273,6 +273,10 @@
     activity: null,
     topic: null,
     playItems: null,
+    tries: 0,
+    anyCorrect: false,
+    itemStart: null,
+    sessionStart: null,
     wordsTopic: "daynight",
     topics: loadTopics(),
     questions: loadLocal(STORAGE_KEY_QUESTIONS, defaultQuestions),
@@ -370,6 +374,7 @@
         localAudioUrl = URL.createObjectURL(blob);
         state.currentAttempt = state.currentAttempt || {};
         state.currentAttempt.hasAudio = true;
+        state.tries++;
         state.recording = false;
         setRobotState("happy");
         setTimeout(function(){ setRobotState("idle"); }, 900);
@@ -396,6 +401,7 @@
               state.currentAttempt.autoMatch = null;
             }
             gotResult = true;
+            if(state.currentAttempt.autoMatch === true) state.anyCorrect = true;
             render();
             if(state.currentAttempt.autoMatch === true) sayFeedback("Correct!", true);
             else if(state.currentAttempt.autoMatch === false) sayFeedback("Try again.", false);
@@ -470,8 +476,12 @@
       rating: att.rating || null,
       silencio: !!att.silencio,
       autocorrige: !!att.autocorrige,
-      noParticipo: !!att.noParticipo
+      noParticipo: !!att.noParticipo,
+      tries: state.tries,
+      correct: !!(state.anyCorrect || att.correctManual),
+      seconds: state.itemStart ? Math.round((Date.now() - state.itemStart)/1000) : null
     });
+    state.tries = 0; state.anyCorrect = false; state.itemStart = Date.now();
     state.currentAttempt = null;
     if(localAudioUrl){ URL.revokeObjectURL(localAudioUrl); localAudioUrl = null; }
     if(state.itemIndex < items.length - 1){
@@ -493,6 +503,10 @@
       phase: null,
       activity: "words",
       date: new Date().toISOString(),
+      durationSec: state.sessionStart ? Math.round((Date.now() - state.sessionStart)/1000) : null,
+      correctCount: state.attempts.filter(function(a){ return a.correct; }).length,
+      totalWords: state.attempts.length,
+      totalTries: state.attempts.reduce(function(n,a){ return n + (a.tries||0); }, 0),
       attempts: state.attempts
     });
     var ok = saveLocal(STORAGE_KEY_SESSIONS, sessions);
@@ -506,6 +520,7 @@
     state.childId = null;
     state.topic = null;
     state.playItems = null;
+    state.tries = 0; state.anyCorrect = false;
     state.itemIndex = 0;
     state.attempts = [];
     state.currentAttempt = null;
@@ -621,6 +636,8 @@
       if(!state.topic) return;
       state.itemIndex = 0; state.attempts = []; state.currentAttempt = null;
       state.playItems = shuffled(state.topics[state.topic]);
+      state.tries = 0; state.anyCorrect = false;
+      state.sessionStart = Date.now(); state.itemStart = Date.now();
       state.view = "play"; render();
     };
     s.appendChild(cta);
@@ -771,6 +788,9 @@
     panel.appendChild(faces);
 
     var chips = el("div","chip-row");
+    var c0 = el("button","chip" + (att.correctManual?" selected":""), "Said it correctly ✓");
+    c0.onclick = function(){ att.correctManual = !att.correctManual; render(); };
+    chips.appendChild(c0);
     var c1 = el("button","chip" + (att.silencio?" selected":""), "Long silence");
     c1.onclick = function(){ att.silencio = !att.silencio; render(); };
     var c2 = el("button","chip" + (att.autocorrige?" selected":""), "Self-corrected");
@@ -875,11 +895,11 @@
       return;
     }
     var table = el("table");
-    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Topic</th><th>Activity</th><th>Date</th><th>Avg.</th></tr>";
+    table.innerHTML = "<tr><th>Child</th><th>Group</th><th>Topic</th><th>Activity</th><th>Date</th><th>Time</th><th>Correct</th><th>Tries</th><th>Avg.</th></tr>";
     sessions.forEach(function(d){
       var avg = avgRating(d.attempts);
       var tr = el("tr","session-row");
-      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+fmtDur(d.durationSec)+"</td><td>"+(typeof d.correctCount==="number"?d.correctCount+"/"+d.totalWords:"—")+"</td><td>"+(typeof d.totalTries==="number"?d.totalTries:"—")+"</td><td>"+(avg!==null?avg.toFixed(1):"—")+"</td>";
       tr.onclick = function(){
         state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
         render();
@@ -887,7 +907,7 @@
       table.appendChild(tr);
       if(state.openSessionId === d.id){
         var detailTr = el("tr");
-        var td = el("td"); td.colSpan = 6;
+        var td = el("td"); td.colSpan = 9;
         td.appendChild(buildSessionDetail(d));
         detailTr.appendChild(td);
         table.appendChild(detailTr);
@@ -903,6 +923,10 @@
     if(!vals.length) return null;
     return vals.reduce(function(a,b){return a+b;},0) / vals.length;
   }
+  function fmtDur(sec){
+    if(typeof sec !== "number") return "—";
+    return Math.floor(sec/60) + ":" + ("0" + (sec % 60)).slice(-2);
+  }
   function fmtDate(iso){
     try{ var d = new Date(iso); return d.toLocaleDateString('en-US',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
     catch(e){ return iso; }
@@ -915,6 +939,9 @@
       var left = el("div","", a.itemText + (a.noParticipo ? " (did not participate)" : ""));
       var faceLabel = a.rating ? ["Nervous","Okay","Happy","Great"][a.rating-1] : "—";
       var tags = [];
+      if(typeof a.tries === "number") tags.push(a.tries + (a.tries===1?" try":" tries"));
+      if(a.correct) tags.push("correct ✓");
+      if(typeof a.seconds === "number") tags.push(a.seconds + "s");
       if(a.silencio) tags.push("silence");
       if(a.autocorrige) tags.push("self-correction");
       if(a.recognized) tags.push('heard: "'+a.recognized+'"');
