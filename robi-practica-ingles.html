@@ -954,7 +954,7 @@
     sessions.forEach(function(d){
       var avg = avgRating(d.attempts);
       var tr = el("tr","session-row");
-      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Words")+"</td><td>"+fmtDate(d.date)+"</td><td>"+fmtDur(d.durationSec)+"</td><td>"+(typeof d.correctCount==="number"?d.correctCount+"/"+d.totalWords:"—")+"</td><td>"+(typeof d.totalTries==="number"?d.totalTries:"—")+"</td><td>"+(d.feeling?["😟","😐","🙂","😄"][d.feeling-1]:"—")+"</td>";
+      tr.innerHTML = "<td>"+d.childId+"</td><td>"+d.jardin+"</td><td>"+(d.topic==="professions"?"Professions":(d.topic==="daynight"?"Day and Night":(d.phase==="antes"?"Before":(d.phase==="despues"?"After":"—"))))+"</td><td>"+(d.activity==="questions"?"Questions":"Vocabulary")+"</td><td>"+fmtDate(d.date)+"</td><td>"+fmtDur(d.durationSec)+"</td><td>"+(typeof d.correctCount==="number"?d.correctCount+"/"+d.totalWords:"—")+"</td><td>"+(typeof d.totalTries==="number"?d.totalTries:"—")+"</td><td>"+(d.feeling?["😟","😐","🙂","😄"][d.feeling-1]:"—")+"</td>";
       tr.onclick = function(){
         state.openSessionId = (state.openSessionId === d.id) ? null : d.id;
         render();
