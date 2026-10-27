@@ -906,7 +906,7 @@
     s.appendChild(el("h1","title","Teacher panel"));
 
     var tabs = el("div","tab-row");
-    [["sessions","Sessions"],["words","Words"],["questions","Questions"],["roster","Children"]].forEach(function(t){
+    [["sessions","Sessions"],["words","Words"],["roster","Children"]].forEach(function(t){
       var b = el("button","tab-btn"+(state.teacherTab===t[0]?" active":""), t[1]);
       b.onclick = function(){ state.teacherTab=t[0]; state.openSessionId=null; render(); };
       tabs.appendChild(b);
@@ -915,7 +915,6 @@
 
     if(state.teacherTab === "sessions") renderSessionsTab(s);
     if(state.teacherTab === "words") renderWordsTab(s);
-    if(state.teacherTab === "questions") renderQuestionsTab(s);
     if(state.teacherTab === "roster") renderRosterTab(s);
 
     var back = el("button","ghost-btn","← Exit panel");
